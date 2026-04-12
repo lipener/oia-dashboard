@@ -2316,22 +2316,28 @@ function renderAuction() {
   // ── 2. DUEL CARDS ──
   const ourIS = A.nos.is;
   document.getElementById('auction-duels').innerHTML = A.duels.map(d => {
-    const gap        = (ourIS - d.theirIS).toFixed(1);
+    const gap        = +(ourIS - d.theirIS).toFixed(1);
     const ourBarW    = ourIS;
     const theirBarW  = d.theirIS;
+    const gapTxt     = gap >= 0
+      ? `<span style="font-size:11px;color:var(--title);font-weight:500">+${gap}pp à frente</span>`
+      : `<span style="font-size:11px;color:#AE4132;font-weight:500">${gap}pp atrás</span>`;
     const outrankTxt = d.outranking < 20
       ? `<span style="color:${d.color};font-weight:500">${d.outranking}%</span> — oportunidade de melhoria`
       : d.outranking >= 40
       ? `<span style="color:var(--title);font-weight:500">${d.outranking}%</span> — boa vantagem`
       : `<span style="font-weight:500">${d.outranking}%</span>`;
+    const logoSrc = d.domain
+      ? `https://www.google.com/s2/favicons?domain=${d.domain}&sz=32`
+      : (d.logoB64 || '');
 
     return `<div style="padding:16px 0;border-bottom:1px solid var(--border)">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div style="display:flex;align-items:center;gap:8px">
-          <img src="${d.logoB64}" width="22" height="22" style="border-radius:5px;object-fit:contain;flex-shrink:0">
+          <img src="${logoSrc}" width="22" height="22" style="border-radius:5px;object-fit:contain;flex-shrink:0">
           <span style="font-size:13px;font-weight:500;color:var(--dark)">${d.name}</span>
         </div>
-        <span style="font-size:11px;color:var(--title);font-weight:500">+${gap}pp à frente</span>
+        ${gapTxt}
       </div>
       <div style="margin-bottom:4px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
@@ -3639,6 +3645,98 @@ function renderAnalytics() {
   }).join('');
 }
 
+// ─── buildAuctionData: converte array plano → estrutura AUCTION_DATA ────────
+// Recebe o array retornado pelo Apps Script (uma linha por data×domínio).
+// Linhas "Você" = dados do próprio Oiá.  Competidores = todos os demais.
+function buildAuctionData(flat) {
+  const PALETTE = ['#6C8EBF','#82B366','#D6B656','#AE4132','#9673A6','#23445D','#97D077','#B46504'];
+
+  const byDomain = {}, byDate = {}, domainOrder = [];
+  flat.forEach(r => {
+    if (!r.date) return;
+    const dom = r.domain || '';
+    if (!byDomain[dom]) { byDomain[dom] = []; if (dom !== 'Você') domainOrder.push(dom); }
+    byDomain[dom].push(r);
+    if (!byDate[r.date]) byDate[r.date] = [];
+    byDate[r.date].push(r);
+  });
+
+  const dates = Object.keys(byDate).sort();
+
+  // IS do Oiá (média do período)
+  const nossas = byDomain['Você'] || [];
+  const validNos = nossas.filter(r => r.impressionShare != null);
+  const nosIS = validNos.length
+    ? validNos.reduce((s,r) => s + r.impressionShare, 0) / validNos.length
+    : 0;
+
+  // Monta competidores
+  const competitors = domainOrder.map((dom, i) => {
+    const rows = byDomain[dom] || [];
+    const avg = key => {
+      const valid = rows.filter(r => r[key] != null);
+      return valid.length ? valid.reduce((s,r) => s + r[key], 0) / valid.length : 0;
+    };
+    return {
+      domain:   dom,
+      name:     dom.replace(/\.com\.br$/, '').replace(/\.com$/, ''),
+      avgIS:    +(avg('impressionShare') * 100).toFixed(1),
+      avgOvlp:  +(avg('overlapRate')     * 100).toFixed(1),
+      avgOrank: +(avg('outrankingShare') * 100).toFixed(1),
+      color:    PALETTE[i % PALETTE.length],
+      rows
+    };
+  });
+
+  // Séries para o gráfico de linha temporal
+  const series = [
+    {
+      name:'Oiá', color:'#8A5F50', fill:true, width:2.5,
+      data: dates.map(dt => {
+        const r = (byDate[dt]||[]).find(x => x.domain === 'Você');
+        return (r && r.impressionShare != null) ? +(r.impressionShare * 100).toFixed(1) : null;
+      })
+    },
+    ...competitors.map(c => ({
+      name: c.name, color: c.color, fill: false, width: 1.5,
+      data: dates.map(dt => {
+        const r = (byDate[dt]||[]).find(x => x.domain === c.domain);
+        return (r && r.impressionShare != null) ? +(r.impressionShare * 100).toFixed(1) : null;
+      })
+    }))
+  ];
+
+  // Duels: filtra quem teve sobreposição, ordena por IS decrescente
+  const duels = competitors
+    .filter(c => c.avgOvlp > 0)
+    .sort((a,b) => b.avgIS - a.avgIS)
+    .slice(0, 6)
+    .map(c => ({
+      name:       c.name,
+      domain:     c.domain,
+      theirIS:    c.avgIS,
+      overlap:    c.avgOvlp,
+      outranking: c.avgOrank,
+      color:      c.color,
+      colorLight: c.color + '18'
+    }));
+
+  // Scatter / mapa de ameaças
+  const scatter = competitors.map(c => ({
+    is:         c.avgIS,
+    outranking: c.avgOrank > 0 ? c.avgOrank : null,
+    label:      c.name,
+    color:      c.color
+  }));
+
+  return {
+    dates: dates.map(dt => dt.slice(5).replace('-', '/')),  // "MM/DD"
+    series, scatter,
+    nos:   { is: +(nosIS * 100).toFixed(1) },
+    duels
+  };
+}
+
 // ── FETCH DO APPS SCRIPT ──────────────────────────────────────────────────────
 
 async function fetchDashboardData() {
@@ -3672,7 +3770,31 @@ async function fetchDashboardData() {
     if (data.ga4_pages)    { GA4_PAGES    = data.ga4_pages;    }
     if (data.ga4_geo)      { GA4_GEO      = data.ga4_geo;      }
 
-    // AUCTION_DATA: mantém seed hardcoded (V2: converter array plano → objeto aninhado)
+    // Converte array plano de auction_insights → AUCTION_DATA aninhado
+    if (data.auction_insights && data.auction_insights.length) {
+      AUCTION_DATA = buildAuctionData(data.auction_insights);
+    }
+
+    // Popula CONTENT_DATA com dados de conteúdo do Instagram
+    if (data.insta_content && data.insta_content.length) {
+      const txContent = data.insta_content.map(r => {
+        let date = null;
+        if (r.publishTime) {
+          const m = r.publishTime.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (m) date = `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+        }
+        const eng = (r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0);
+        return {
+          postId: r.postId, account: r.account, type: r.type,
+          description: r.description, permalink: r.permalink, date,
+          views: r.views||0, reach: r.reach||0, likes: r.likes||0,
+          shares: r.shares||0, follows: r.follows||0, comments: r.comments||0,
+          saves: r.saves||0, engagement: eng
+        };
+      }).filter(r => r.date);
+      CONTENT_DATA.length = 0;
+      txContent.forEach(r => CONTENT_DATA.push(r));
+    }
 
     // Atualiza bounds dos inputs de data (permite selecionar range mais amplo se Sheets tiver
     // dados anteriores ao seed), mas SEM resetar a seleção atual do usuário.
