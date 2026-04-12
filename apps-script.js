@@ -13,14 +13,15 @@
 //   6. Para atualizar o código após mudanças: Implantar → Gerenciar implantações → Editar → Nova versão
 //
 // TABS LIDAS (todas opcionais — retorna [] se a aba não existir):
-//   - meta_ads             → meta_daily
-//   - ga4_sessions         → ga4_sessions
-//   - ga4_sources          → ga4_sources
-//   - ga4_pages            → ga4_pages
-//   - ga4_geo              → ga4_geo
-//   - gads_keywords        → gads_keywords  (= GADS_DAILY no JS)
-//   - gads_campaigns       → gads_campaigns (= GADS_CAMPAIGN no JS — nível campanha, para IS)
-//   - gads_auction_insights→ auction_insights
+//   - meta_ads              → meta_daily
+//   - ga4_sessions          → ga4_sessions
+//   - ga4_sources           → ga4_sources
+//   - ga4_pages             → ga4_pages
+//   - ga4_geo               → ga4_geo
+//   - gads_keywords         → gads_keywords   (= GADS_DAILY no JS)
+//   - gads_campaigns        → gads_campaigns  (= GADS_CAMPAIGN no JS — nível campanha, para IS)
+//   - gads_auction-insights → auction_insights (headers em PT-BR; normaliza %/"--"/"< 10%")
+//   - insta-content         → insta_content    (Post ID como string; publishTime "mm/dd/yyyy HH:MM")
 //
 // TABS DISPONÍVEIS NO SHEETS (a integrar em V2):
 //   gads_search_terms, gads_ads, gads_devices, gads_geo, gads_schedule, gads_yoy
@@ -54,7 +55,8 @@ function doGet(e) {
     ga4_geo:          getGa4Geo(ss),
     gads_keywords:    getGadsKeywords(ss),
     gads_campaigns:   getGadsCampaigns(ss),    // aba: gads_campaigns (nível campanha, para IS)
-    auction_insights: getAuctionInsights(ss),  // aba: gads_auction_insights
+    auction_insights: getAuctionInsights(ss),  // aba: gads_auction-insights
+    insta_content:    getInstaContent(ss),      // aba: insta-content
     updated_at:       new Date().toISOString()
   };
 
@@ -125,6 +127,37 @@ function fmtDate(val) {
 function toIntOrNull(val) {
   var n = toInt(val);
   return (n === 0 || n === null) ? null : n;
+}
+
+/**
+ * Normaliza string de percentual do Sheets para float 0–1.
+ * Trata:
+ *   "17,60%" → 0.176
+ *   "< 10%"  → 0.05  (proxy conservador)
+ *   "--"     → null  (N/A — não exibir)
+ */
+function toPercent(val) {
+  if (!val || val === '--') return null;
+  var s = String(val).trim();
+  if (s === '< 10%') return 0.05;
+  s = s.replace('%', '').replace(',', '.').trim();
+  var n = parseFloat(s);
+  return isNaN(n) ? null : n / 100;
+}
+
+/**
+ * Converte data no formato dd/mm/yyyy (padrão do Google Ads UI) para yyyy-mm-dd.
+ * Aceita também objetos Date (quando Sheets interpreta a célula automaticamente).
+ */
+function fmtDatePT(val) {
+  if (!val) return null;
+  if (val instanceof Date) return Utilities.formatDate(val, 'America/Sao_Paulo', 'yyyy-MM-dd');
+  var s = String(val).trim();
+  var p = s.split('/');
+  if (p.length === 3 && p[2].length === 4) {
+    return p[2] + '-' + ('0' + p[1]).slice(-2) + '-' + ('0' + p[0]).slice(-2);
+  }
+  return s.slice(0, 10);
 }
 
 // ─── meta_ads → meta_daily ───────────────────────────────────────────────────
@@ -295,33 +328,67 @@ function getGadsCampaigns(ss) {
   });
 }
 
-// ─── gads_auction_insights ───────────────────────────────────────────────────
-// Aba preenchida manualmente (download do Google Ads → colar no Sheets).
-// Estrutura esperada:
-//   period, competitor, impressionShare, overlapRate, posAboveRate,
-//   topOfPageRate, absTopOfPageRate, outranking
-
-// Colunas reais no Sheets (confirmado 2026-04-11):
-//   date, campaign, domain, impression_share, outranking_share,
-//   overlap_rate, position_above_rate, top_impression_pct
-// NOTA: dados preenchidos manualmente (download do Google Ads UI).
-// O HTML usa AUCTION_DATA em formato aninhado — conversão V2 (TODO).
-// Por ora o Apps Script retorna array plano; HTML mantém seed hardcoded.
+// ─── gads_auction-insights ───────────────────────────────────────────────────
+// Aba preenchida manualmente (download do Google Ads UI → colar no Sheets).
+// Headers em PT-BR (exportação padrão do Google Ads):
+//   Dia | Domínio do URL de visualização | Parcela de impressões |
+//   Taxa de sobreposição | Taxa de posição superior |
+//   Taxa da parte superior da página | Taxa da 1ª posição na página |
+//   Parcela de vitórias
+//
+// Normalização aplicada aqui:
+//   "--"    → null  (linha "Você" ou dado insuficiente)
+//   "< 10%" → 0.05  (proxy conservador para valores abaixo do limiar de reporte)
+//   "x,xx%" → float 0-1
+//
+// Linhas "Você" (= o próprio Oiá) são incluídas no array;
+// o HTML as separa para construir a série temporal do Oiá.
 
 function getAuctionInsights(ss) {
-  var sheet = ss.getSheetByName('gads_auction_insights');
+  var sheet = ss.getSheetByName('gads_auction-insights');
   if (!sheet) return [];
   var rows = sheetToJSON(sheet);
   return rows.map(function(r) {
     return {
-      date:            fmtDate(r.date),
-      campaign:        r.campaign         || '',
-      domain:          r.domain           || '',
-      impressionShare: toFloat(r.impression_share),
-      outrankingShare: toFloat(r.outranking_share),
-      overlapRate:     toFloat(r.overlap_rate),
-      posAboveRate:    toFloat(r.position_above_rate),
-      topImpressionPct:toFloat(r.top_impression_pct)
+      date:            fmtDatePT(r['Dia']),
+      domain:          r['Domínio do URL de visualização'] || '',
+      impressionShare: toPercent(r['Parcela de impressões']),
+      overlapRate:     toPercent(r['Taxa de sobreposição']),
+      posAboveRate:    toPercent(r['Taxa de posição superior']),
+      topPageRate:     toPercent(r['Taxa da parte superior da página']),
+      absTopPageRate:  toPercent(r['Taxa da 1ª posição na página']),
+      outrankingShare: toPercent(r['Parcela de vitórias'])
+    };
+  });
+}
+
+// ─── insta-content ───────────────────────────────────────────────────────────
+// Aba com métricas lifetime por post (exportação manual do Meta Business Suite).
+// Headers em inglês; Post ID deve estar formatado como Texto no Sheets
+// (evita perda de precisão por notação científica em IDs de 17-18 dígitos).
+// Publish time: "mm/dd/yyyy HH:MM" — conversão para yyyy-mm-dd feita no HTML.
+
+function getInstaContent(ss) {
+  var sheet = ss.getSheetByName('insta-content');
+  if (!sheet) return [];
+  var rows = sheetToJSON(sheet);
+  return rows.map(function(r) {
+    return {
+      postId:      String(r['Post ID']          || ''),
+      account:     r['Account username']         || '',
+      accountName: r['Account name']             || '',
+      type:        r['Post type']                || '',
+      description: r['Description']              || '',
+      permalink:   r['Permalink']                || '',
+      publishTime: r['Publish time']             || '',
+      durationSec: toInt(r['Duration (sec)'])    || 0,
+      views:       toInt(r['Views'])             || 0,
+      reach:       toInt(r['Reach'])             || 0,
+      likes:       toInt(r['Likes'])             || 0,
+      shares:      toInt(r['Shares'])            || 0,
+      follows:     toInt(r['Follows'])           || 0,
+      comments:    toInt(r['Comments'])          || 0,
+      saves:       toInt(r['Saves'])             || 0
     };
   });
 }
