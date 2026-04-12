@@ -130,15 +130,30 @@ function toIntOrNull(val) {
 }
 
 /**
- * Normaliza string de percentual do Sheets para float 0–1.
- * Trata:
- *   "17,60%" → 0.176
+ * Normaliza percentual do Sheets para float 0–1.
+ *
+ * Dois cenários possíveis dependendo do formato da célula no Sheets:
+ *
+ * A) Célula formatada como Porcentagem (número):
+ *    Apps Script getValues() retorna o decimal bruto → ex: 0.68 para 68%
+ *    Nesse caso, retornar diretamente (sem dividir por 100 de novo).
+ *
+ * B) Célula como texto (ex: colagem manual de CSV):
+ *    getValues() retorna a string → ex: "68,00%"
+ *    Nesse caso, strip de % + troca vírgula→ponto + parseFloat + /100.
+ *
+ * Casos especiais (sempre chegam como string, independente do formato):
  *   "< 10%"  → 0.05  (proxy conservador)
- *   "--"     → null  (N/A — não exibir)
+ *   "--"     → null  (N/A — sem dado)
  */
 function toPercent(val) {
-  if (!val || val === '--') return null;
+  if (val === null || val === undefined || val === '') return null;
+  if (val === '--') return null;
+  // Cenário A: Sheets retornou decimal direto (formato Porcentagem)
+  if (typeof val === 'number') return val;
+  // Cenário B: string de texto
   var s = String(val).trim();
+  if (!s || s === '--') return null;
   if (s === '< 10%') return 0.05;
   s = s.replace('%', '').replace(',', '.').trim();
   var n = parseFloat(s);
@@ -336,9 +351,10 @@ function getGadsCampaigns(ss) {
 //   Taxa da parte superior da página | Taxa da 1ª posição na página |
 //   Parcela de vitórias
 //
-// Normalização aplicada aqui:
-//   "--"    → null  (linha "Você" ou dado insuficiente)
-//   "< 10%" → 0.05  (proxy conservador para valores abaixo do limiar de reporte)
+// Normalização aplicada aqui (via toPercent):
+//   Número decimal (célula Porcentagem no Sheets) → retorna diretamente
+//   "--"    → null
+//   "< 10%" → 0.05
 //   "x,xx%" → float 0-1
 //
 // Linhas "Você" (= o próprio Oiá) são incluídas no array;
