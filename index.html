@@ -3191,7 +3191,7 @@ const CNT_STATE = {
 };
 
 function filteredContent() {
-  let rows = CONTENT_DATA.filter(d => inRange(d.date));
+  let rows = CONTENT_DATA; // sem filtro de range — conteudo cobre periodo mais longo
   if (CNT_STATE.account !== 'all') rows = rows.filter(d => d.account === CNT_STATE.account);
   return rows;
 }
