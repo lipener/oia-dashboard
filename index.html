@@ -3782,6 +3782,11 @@ async function fetchDashboardData() {
         if (r.publishTime) {
           const m = r.publishTime.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
           if (m) date = `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+          else {
+            // ISO fallback
+            const iso = r.publishTime.match(/^([0-9]{4}-[0-9]{2}-[0-9]{2})/);
+            if (iso) date = iso[1];
+          }
         }
         const eng = (r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0);
         return {
