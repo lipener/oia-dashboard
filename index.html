@@ -711,6 +711,7 @@ body::before {
   <input type="date" id="dateTo" class="date-input" onchange="setCustomRange()">
   <div class="filter-range-display" id="rangeDisplay"></div>
 </div>
+<div id="data-freshness" style="font-size:10px;color:var(--muted);letter-spacing:.03em;padding:2px 16px 6px;text-align:right;opacity:.75"></div>
 
 <!-- ═══════════════════════════════════════ -->
 <!-- PAGE: GERAL                            -->
@@ -1827,7 +1828,7 @@ function initDates() {
 
 function setPreset(preset) {
   const all = allDates().filter(Boolean).sort();
-  const todayStr = all[all.length - 1] || new Date().toISOString().slice(0,10);
+  const todayStr = new Date().toISOString().slice(0,10); // data REAL de hoje
   const today = new Date(todayStr);
   let from;
 
@@ -1875,6 +1876,21 @@ function setCustomRange() {
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
   updateRangeDisplay();
   renderAll();
+}
+
+function updateFreshnessDisplay() {
+  const maxDate = arr => arr.map(d => d.date).filter(Boolean).sort().pop() || null;
+  const gMax   = maxDate(GADS_DAILY);
+  const mMax   = maxDate(META_DAILY);
+  const ga4Max = GA4_SESSIONS.map(d => d.date).filter(Boolean).sort().pop() || null;
+  const cMax   = CONTENT_DATA.map(d => d.date).filter(Boolean).sort().pop() || null;
+  const parts = [];
+  if (gMax)   parts.push('Google Ads ' + fmtDate(gMax));
+  if (mMax)   parts.push('Meta ' + fmtDate(mMax));
+  if (ga4Max) parts.push('Analytics ' + fmtDate(ga4Max));
+  if (cMax)   parts.push('Conteúdo ' + fmtDate(cMax));
+  const el = document.getElementById('data-freshness');
+  if (el) el.textContent = parts.length ? 'Dados até: ' + parts.join(' · ') : '';
 }
 
 function updateRangeDisplay() {
@@ -3805,8 +3821,9 @@ async function fetchDashboardData() {
     // Popula CONTENT_DATA com dados de conteúdo do Instagram
     if (data.insta_content && data.insta_content.length) {
       const txContent = data.insta_content.map(r => {
-        let date = null;
-        if (r.publishTime) {
+        // publishDate enviado pelo Apps Script (yyyy-mm-dd); fallback para parsing legado
+        let date = r.publishDate || null;
+        if (!date && r.publishTime) {
           const m = r.publishTime.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
           if (m) date = `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
           else {
@@ -3852,6 +3869,7 @@ async function fetchDashboardData() {
 
     renderAll();
     renderAnalytics();
+    updateFreshnessDisplay();
 
   } catch (err) {
     console.warn('Falha ao buscar dados do Apps Script:', err);
