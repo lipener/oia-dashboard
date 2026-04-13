@@ -3184,7 +3184,7 @@ function openPost(url) {
 
 const CNT_STATE = {
   account:  'all',
-  period:   'month',
+  period:   'day',
   topSort:  'reach',
   type:     'all',
   tableSort: { col: 'date', dir: -1 },
@@ -3460,11 +3460,12 @@ function setCntAccount(acc) {
 function setCntPeriod(p) {
   CNT_STATE.period = p;
   ['day','week','month'].forEach(x => document.getElementById(`cnt-period-${x}`)?.classList.toggle('active', x===p));
-  const labels = { day:'Alcance por dia', week:'Alcance por semana', month:'Alcance por mês' };
+  const labelsR = { day:'Alcance diário · Taxa de engajamento', week:'Alcance semanal · Taxa de engajamento', month:'Alcance mensal · Taxa de engajamento' };
+  const labelsE = { day:'Posts diários · Seguidores ganhos', week:'Posts semanais · Seguidores ganhos', month:'Posts mensais · Seguidores ganhos' };
   const elR = document.getElementById('cnt-chart-reach-label');
   const elE = document.getElementById('cnt-chart-eng-label');
-  if (elR) elR.textContent = labels[p];
-  if (elE) elE.textContent = labels[p].replace('Alcance','Engajamento');
+  if (elR) elR.textContent = labelsR[p];
+  if (elE) elE.textContent = labelsE[p];
   renderCntCharts(filteredContent());
 }
 
@@ -3790,11 +3791,11 @@ async function fetchDashboardData() {
         }
         const eng = (r.likes||0) + (r.comments||0) + (r.shares||0) + (r.saves||0);
         return {
-          postId: r.postId, account: r.account, type: r.type,
-          description: r.description, permalink: r.permalink, date,
+          id: r.postId, account: r.account, type: (r.type||'').toLowerCase(),
+          desc: r.description, url: r.permalink, date, month: date ? date.slice(0,7) : null,
           views: r.views||0, reach: r.reach||0, likes: r.likes||0,
           shares: r.shares||0, follows: r.follows||0, comments: r.comments||0,
-          saves: r.saves||0, engagement: eng
+          saves: r.saves||0, engagement: eng, engRate: (r.reach||0) > 0 ? +((eng/(r.reach||1))*100).toFixed(2) : 0
         };
       }).filter(r => r.date);
       CONTENT_DATA.length = 0;
