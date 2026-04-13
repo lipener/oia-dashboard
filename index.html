@@ -1065,6 +1065,7 @@ body::before {
         <button class="toggle-btn"        id="cnt-acc-adri"   onclick="setCntAccount('adrianabittaroficial')">Casa Daia</button>
       </div>
     </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><div class="toggle-group"><button class="toggle-btn" id="cnt-hist-filter" onclick="setCntHistMode('filter')">Filtrar por período</button><button class="toggle-btn active" id="cnt-hist-all" onclick="setCntHistMode('all')">Todo histórico</button></div></div>
     <div class="kpi-grid" id="cnt-kpis"></div>
   </div>
 
@@ -1206,7 +1207,7 @@ body::before {
 
   <!-- Detalhe de fontes -->
   <div class="chart-card" style="margin-bottom:16px;">
-    <div class="chart-label"><span class="chart-label-dot blue"></span>Detalhamento de fontes</div>
+    <div class="chart-label"><span class="chart-label-dot blue"></span>Detalhamento de fontes <span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px">· período completo</span></div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead>
@@ -3204,10 +3205,11 @@ const CNT_STATE = {
   topSort:  'reach',
   type:     'all',
   tableSort: { col: 'date', dir: -1 },
+  allHistory: true,
 };
 
 function filteredContent() {
-  let rows = CONTENT_DATA; // sem filtro de range — conteudo cobre periodo mais longo
+  let rows = CNT_STATE.allHistory ? CONTENT_DATA : CONTENT_DATA.filter(d => inRange(d.date));
   if (CNT_STATE.account !== 'all') rows = rows.filter(d => d.account === CNT_STATE.account);
   return rows;
 }
@@ -3506,6 +3508,13 @@ function setCntType(t) {
 // ═══════════════════════════════════════════════
 
 // ── ANALYTICS RENDER ─────────────────────────────────────────────────────────
+
+function setCntHistMode(mode) {
+  CNT_STATE.allHistory = mode === 'all';
+  document.getElementById('cnt-hist-filter')?.classList.toggle('active', mode !== 'all');
+  document.getElementById('cnt-hist-all')?.classList.toggle('active', mode === 'all');
+  renderContent();
+}
 
 let _chartGa4Sessions  = null;
 let _chartGa4Channels  = null;
