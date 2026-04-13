@@ -1808,9 +1808,8 @@ const CHARTS = {};
 function allDates() {
   const g = GADS_DAILY.map(d => d.date);
   const m = META_DAILY.map(d => d.date);
-  // CONTENT_DATA excluído: posts do Instagram cobrem desde abr/2025
-  // e distorceriam o range padrão do filtro (que deve refletir o período de anúncios)
-  return [...g, ...m].sort();
+  const c = CONTENT_DATA.map(d => d.date).filter(Boolean);
+  return [...g, ...m, ...c].sort();
 }
 
 function initDates() {
