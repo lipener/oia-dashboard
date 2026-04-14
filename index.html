@@ -2951,42 +2951,41 @@ function renderMetaPage() {
       Drop-off em vermelho quando &gt;60% entre etapas consecutivas.
     </div>`;
 
-  // Retention per day
-  const dayColors  = ['#6A8FA0','#8FA3B1','#B8CAD5'];
-  const dayDatasets = rows.map((r, i) => {
-    const plays = r.plays || r.impressions || 1;
-    return {
-      label: fmtDate(r.date),
-      data: [
-        100,
-        r.plays25  ? r.plays25/plays*100  : null,
-        r.plays50  ? r.plays50/plays*100  : null,
-        r.plays75  ? r.plays75/plays*100  : null,
-        r.plays100 ? r.plays100/plays*100 : null,
-        r.thruPlays? r.thruPlays/plays*100: null,
-      ],
-      borderColor:      dayColors[i % dayColors.length],
-      backgroundColor:  'transparent',
-      borderWidth:      i === rows.length-1 ? 2 : 1.5,
-      pointRadius:      3,
-      pointBackgroundColor: dayColors[i % dayColors.length],
-      tension: .2,
-      spanGaps: true,
-    };
-  });
+  // Retention — linha única com a média do período (apenas dias com dados de funil)
+  const validRows = rows.filter(r => r.plays25 != null);
+  const n = validRows.length || 1;
+  const avgPct = key => validRows.length
+    ? validRows.reduce((s,r) => {
+        const plays = r.plays || r.impressions || 1;
+        return s + (r[key] != null ? r[key]/plays*100 : 0);
+      }, 0) / n
+    : null;
 
-  const retLabels = ['Plays','25%','50%','75%','100%','ThruPlay'];
+  const avgDataset = [{
+    label: 'Média do período',
+    data: [100, avgPct('plays25'), avgPct('plays50'), avgPct('plays75'), avgPct('plays100')],
+    borderColor:     '#6A8FA0',
+    backgroundColor: 'rgba(106,143,160,0.08)',
+    borderWidth:     2.5,
+    pointRadius:     5,
+    pointBackgroundColor: '#6A8FA0',
+    fill: true,
+    tension: .2,
+    spanGaps: true,
+  }];
+
+  const retLabels = ['Plays','25%','50%','75%','100%'];
   makeOrUpdate('chart-meta-retention',{
     type:'line',
     data:{
       labels: retLabels,
-      datasets: dayDatasets,
+      datasets: avgDataset,
     },
     options:{...CHART_DEFAULTS,
       plugins:{
-        legend:{position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',boxWidth:6,padding:12,font:{size:10}}},
+        legend:{display:false},
         tooltip:{backgroundColor:'#F8F4EF',titleColor:'#3D2820',bodyColor:'#5C4840',borderColor:'rgba(106,143,160,0.2)',borderWidth:1,padding:10,
-          callbacks:{ label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toFixed(1)}%` }
+          callbacks:{ label: ctx => ` ${ctx.parsed.y?.toFixed(1)}% dos plays` }
         }
       },
       scales:{
