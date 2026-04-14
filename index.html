@@ -1977,7 +1977,7 @@ function aggMeta(rows) {
   const spend  = rows.reduce((s,d)=>s+d.spend,0);
   const thru   = rows.reduce((s,d)=>s+d.thruPlays,0);
   const lclk   = rows.reduce((s,d)=>s+d.linkClicks,0);
-  const plays  = rows.reduce((s,d)=>s+d.plays,0);
+  const plays  = rows.reduce((s,d)=>s+(d.plays||d.impressions||0),0);
   const p25    = rows.reduce((s,d)=>s+d.plays25,0);
   const p50    = rows.reduce((s,d)=>s+d.plays50,0);
   const p75    = rows.reduce((s,d)=>s+d.plays75,0);
@@ -2954,7 +2954,7 @@ function renderMetaPage() {
   // Retention per day
   const dayColors  = ['#6A8FA0','#8FA3B1','#B8CAD5'];
   const dayDatasets = rows.map((r, i) => {
-    const plays = r.plays || 1;
+    const plays = r.plays || r.impressions || 1;
     return {
       label: fmtDate(r.date),
       data: [
