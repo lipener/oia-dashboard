@@ -3175,12 +3175,7 @@ function updateMetaFilterUI() {
 // TAB + TOGGLE HANDLERS
 // ═══════════════════════════════════════════════
 
-function setYoyView(v) {
-  document.getElementById('yoy-view-inst').style.display = v==='inst' ? 'block' : 'none';
-  document.getElementById('yoy-view-geral').style.display = v==='geral' ? 'block' : 'none';
-  document.getElementById('yoy-toggle-inst').classList.toggle('active', v==='inst');
-  document.getElementById('yoy-toggle-geral').classList.toggle('active', v==='geral');
-}
+function setYoyView(v) { /* vista única — toggle removido */ }
 
 function switchTab(tab) {
   STATE.activeTab = tab;
@@ -3912,12 +3907,8 @@ function hideDescTooltip() {
   <div class="page-title">Comparativo vs. 2025</div>
   <div class="page-subtitle">Campanha 2025: "Oiá" — única campanha, 1 ad group, BROAD match, termos misturados</div>
 
-  <div style="padding:12px 24px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-    <div class="toggle-group">
-      <button class="toggle-btn active" id="yoy-toggle-inst" onclick="setYoyView('inst')">Institucional</button>
-      <button class="toggle-btn" id="yoy-toggle-geral" onclick="setYoyView('geral')">Geral</button>
-    </div>
-    <span style="font-size:10.5px;color:var(--muted)">Institucional = keywords oia/oiá · 2026 = Mar 9–Abr 11 (34 dias) · dados via API Google Ads</span>
+  <div style="padding:8px 24px 0">
+    <span style="font-size:10.5px;color:var(--muted)">Keywords oia/oiá · campanha institucional · Mar 9–Abr 11, 2026 (34 dias) · dados via API Google Ads</span>
   </div>
 
   <!-- ── INSTITUCIONAL VIEW ─────────────────────────────── -->
@@ -4126,70 +4117,6 @@ function hideDescTooltip() {
       Métricas de 2025 = média ponderada por impressões das 8 keywords oia/oiá na campanha "Oiá". 2026 = campanha institucional (Mar 9–Abr 11). Budget 2026/mês extrapolado: R$1.737 / 34 dias × 30 = R$1.532.
     </div>
   </div>
-
-  <!-- ── GERAL VIEW ──────────────────────────────────────── -->
-  <div id="yoy-view-geral" style="display:none;padding:16px 24px 32px">
-
-    <div style="background:rgba(174,65,50,0.07);border-left:3px solid #AE4132;border-radius:4px;padding:12px 15px;margin-bottom:18px;font-size:11.5px;color:var(--dark);line-height:1.65">
-      <strong>Março e Abril de 2025 — zero impressões no Google.</strong> Campanha pausada neste período. Comparação: Mar 9–Abr 11 2025 (0 impr.) vs Mar 9–Abr 11 2026 (13.373 impr.).
-    </div>
-
-    <!-- Same period -->
-    <div class="chart-card" style="padding:18px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Mesmo período — Mar 9 a Abr 11</div>
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center">
-        <div style="text-align:center;padding:14px;background:rgba(138,95,80,0.05);border-radius:6px">
-          <div style="font-size:10.5px;color:var(--muted);margin-bottom:8px;font-weight:500">2025</div>
-          <div style="font-size:38px;font-weight:700;color:#AE4132;line-height:1">0</div>
-          <div style="font-size:10.5px;color:var(--muted);margin-top:4px">impressões</div>
-          <div style="font-size:10.5px;color:#AE4132;margin-top:6px;font-weight:500">campanha pausada</div>
-        </div>
-        <div style="font-size:24px;color:var(--muted)">→</div>
-        <div style="padding:14px;background:rgba(61,138,80,0.05);border:1px solid rgba(61,138,80,0.12);border-radius:6px">
-          <div style="text-align:center;margin-bottom:14px">
-            <div style="font-size:10.5px;color:var(--muted);margin-bottom:4px;font-weight:500">2026 — 13.373 impr. · R$2.906 · 1.549 cliques</div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div style="padding:10px;background:rgba(61,138,80,0.06);border-radius:5px">
-              <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">INST_BRAND</div>
-              <div style="font-size:13px;font-weight:600;color:var(--title)">4.620 impr.</div>
-              <div style="font-size:10px;color:var(--muted);margin-top:3px">Presença 70.8%</div>
-              <div style="font-size:10px;color:var(--muted)">Cliques 58.6%</div>
-            </div>
-            <div style="padding:10px;background:rgba(61,138,80,0.06);border-radius:5px">
-              <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">GEN_LOCAL</div>
-              <div style="font-size:13px;font-weight:600;color:var(--title)">8.753 impr.</div>
-              <div style="font-size:10px;color:var(--muted);margin-top:3px">Presença 28.2%</div>
-              <div style="font-size:10px;color:var(--muted)">Cliques 12.4%</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Full year 2025 context -->
-    <div class="chart-card" style="padding:18px;margin-bottom:12px">
-      <div style="font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Ano completo 2025 — campanha "Oiá" (contexto)</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px">
-        <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Impressões</div><div style="font-size:19px;font-weight:600;color:var(--body)">134.207</div></div>
-        <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Cliques</div><div style="font-size:19px;font-weight:600;color:var(--body)">4.723</div></div>
-        <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Investimento</div><div style="font-size:19px;font-weight:600;color:var(--body)">R$4.692</div><div style="font-size:9px;color:var(--muted)">~R$391/mês</div></div>
-        <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Presença</div><div style="font-size:19px;font-weight:600;color:var(--body)">32.7%</div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding-top:12px;border-top:1px solid var(--border)">
-        <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Posição de topo</div><div style="font-size:19px;font-weight:600;color:var(--body)">11.8%</div></div>
-        <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Topo absoluto</div><div style="font-size:19px;font-weight:600;color:var(--body)">≤10%</div></div>
-        <div><div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Parcela de cliques</div><div style="font-size:19px;font-weight:600;color:var(--body)">12.9%</div></div>
-      </div>
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:10.5px;color:var(--muted);line-height:1.6">
-        Estrutura: 1 campanha · 1 ad group · 38 keywords em BROAD · termos institucionais, genéricos e de atividade agrupados juntos sem segmentação.
-      </div>
-    </div>
-
-    <div style="font-size:10px;color:var(--muted);line-height:1.7">
-      Dados históricos via API Google Ads. Campanha 2025 iniciada em Set/2024, pausada atualmente.
-    </div>
-  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════ -->
@@ -4356,108 +4283,54 @@ function hideDescTooltip() {
       </div>
     </div>
 
-    <!-- POR CANAL ─────────────────────────────────────────── -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <!-- CPA POR CANAL ──────────────────────────────────────── -->
+    <div class="chart-card" style="padding:24px;margin-bottom:0">
+      <div style="font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Quanto custou cada demonstração de interesse</div>
+      <div style="font-size:12px;color:var(--body);margin-bottom:24px;line-height:1.5">Abr 1–14 · primeiros 14 dias de medição</div>
 
-      <div class="chart-card" style="padding:18px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-          <div style="width:28px;height:28px;background:#4285F4;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0">G</div>
-          <div>
-            <div style="font-size:11.5px;font-weight:600;color:var(--title)">Google Ads</div>
-            <div style="font-size:9.5px;color:var(--muted)">Abr 1–14</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+        <!-- Google Ads -->
+        <div style="background:rgba(66,133,244,0.05);border:1px solid rgba(66,133,244,0.15);border-radius:8px;padding:22px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+            <div style="width:32px;height:32px;background:#4285F4;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700;flex-shrink:0">G</div>
+            <div style="font-size:12px;font-weight:600;color:var(--title)">Google Ads</div>
+          </div>
+          <div style="text-align:center;margin-bottom:20px">
+            <div style="font-size:54px;font-weight:700;color:#4285F4;line-height:1">R$8</div>
+            <div style="font-size:12px;color:var(--body);margin-top:6px;font-weight:500">por clique em Reservar</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.5">De cada pessoa que clicou em anuncio<br>e depois foi ao botão de reserva</div>
+          </div>
+          <div style="border-top:1px solid rgba(66,133,244,0.15);padding-top:14px;display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)">
+            <span>137 conversões</span>
+            <span>R$1.095 investidos</span>
           </div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-          <div style="background:rgba(66,133,244,0.06);border-radius:5px;padding:10px">
-            <div style="font-size:9.5px;color:var(--muted);margin-bottom:2px">Marca</div>
-            <div style="font-size:15px;font-weight:600;color:var(--title)">395</div>
-            <div style="font-size:9px;color:var(--muted)">cliques · R$714</div>
+
+        <!-- Meta Ads -->
+        <div style="background:rgba(24,119,242,0.05);border:1px solid rgba(24,119,242,0.15);border-radius:8px;padding:22px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+            <div style="width:32px;height:32px;background:#1877F2;border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:700;flex-shrink:0">f</div>
+            <div style="font-size:12px;font-weight:600;color:var(--title)">Meta Ads</div>
           </div>
-          <div style="background:rgba(66,133,244,0.06);border-radius:5px;padding:10px">
-            <div style="font-size:9.5px;color:var(--muted);margin-bottom:2px">Destino</div>
-            <div style="font-size:15px;font-weight:600;color:var(--title)">116</div>
-            <div style="font-size:9px;color:var(--muted)">cliques · R$340</div>
+          <div style="text-align:center;margin-bottom:20px">
+            <div style="font-size:54px;font-weight:700;color:#1877F2;line-height:1">R$64</div>
+            <div style="font-size:12px;color:var(--body);margin-top:6px;font-weight:500">por início de reserva na plataforma</div>
+            <div style="font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.5">De cada pessoa que avançou até<br>a etapa de finalização na Silbeck</div>
+          </div>
+          <div style="border-top:1px solid rgba(24,119,242,0.15);padding-top:14px;display:flex;justify-content:space-between;font-size:10.5px;color:var(--muted)">
+            <span>4 inícios registrados</span>
+            <span>R$256 investidos</span>
           </div>
         </div>
-        <div style="font-size:11px;color:var(--body);line-height:1.55;margin-bottom:12px">
-          <strong>63 sinais de interesse</strong> registrados — buscas de direções, visitas ao site e contatos gerados pelos anúncios.
-        </div>
-        <div style="background:rgba(138,95,80,0.05);border-radius:4px;padding:10px 12px;font-size:10.5px;color:var(--body);line-height:1.5">
-          A medição de reservas concluídas via Google Ads começa em breve — a conversão já está configurada na conta.
-        </div>
+
       </div>
 
-      <div class="chart-card" style="padding:18px">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-          <div style="width:28px;height:28px;background:#1877F2;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0">f</div>
-          <div>
-            <div style="font-size:11.5px;font-weight:600;color:var(--title)">Meta Ads</div>
-            <div style="font-size:9.5px;color:var(--muted)">Abr 1–13</div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-          <div style="background:rgba(24,119,242,0.06);border-radius:5px;padding:10px">
-            <div style="font-size:9.5px;color:var(--muted);margin-bottom:2px">Alcance</div>
-            <div style="font-size:15px;font-weight:600;color:var(--title)">44.933</div>
-            <div style="font-size:9px;color:var(--muted)">pessoas únicas</div>
-          </div>
-          <div style="background:rgba(24,119,242,0.06);border-radius:5px;padding:10px">
-            <div style="font-size:9.5px;color:var(--muted);margin-bottom:2px">Investimento</div>
-            <div style="font-size:15px;font-weight:600;color:var(--title)">R$256</div>
-            <div style="font-size:9px;color:var(--muted)">13 dias</div>
-          </div>
-        </div>
-        <div style="background:rgba(61,138,80,0.07);border:1px solid rgba(61,138,80,0.15);border-radius:5px;padding:12px;margin-bottom:12px">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px">
-            <span style="font-size:11.5px;font-weight:600;color:#3D8A50">Iniciaram a finalização de reserva</span>
-            <span style="font-size:22px;font-weight:700;color:#3D8A50">4</span>
-          </div>
-          <div style="font-size:10px;color:var(--muted)">R$64 por início de reserva · 2 pedidos de contato direto</div>
-        </div>
-        <div style="background:rgba(61,138,80,0.05);border-radius:4px;padding:10px 12px;font-size:10.5px;color:var(--body);line-height:1.5">
-          Resultado expressivo para uma campanha de awareness — conversões de fundo de funil em campanha voltada para alcance.
-        </div>
+      <div style="margin-top:16px;padding:12px 14px;background:rgba(138,95,80,0.04);border-radius:5px;font-size:11px;color:var(--body);line-height:1.6">
+        As duas métricas medem eventos diferentes — o Google Ads captura intenção de reserva no site, o Meta Ads captura quem avançou até a plataforma de pagamento. À medida que o rastreamento amadurece, conseguiremos comparar os canais na mesma régua.
       </div>
-
     </div>
 
-    <!-- DE ONDE VIERAM AS VISITAS ────────────────────────── -->
-    <div class="chart-card" style="padding:18px">
-      <div class="chart-label" style="margin-bottom:14px"><span class="chart-label-dot"></span>De onde vieram as 3.382 visitas — Abr 1–13</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
-        <div style="padding:10px;background:rgba(138,95,80,0.04);border-radius:5px">
-          <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Busca orgânica</div>
-          <div style="font-size:18px;font-weight:600;color:var(--title)">974</div>
-          <div style="font-size:9.5px;color:var(--muted)">29% do total</div>
-        </div>
-        <div style="padding:10px;background:rgba(138,95,80,0.04);border-radius:5px">
-          <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Referências externas</div>
-          <div style="font-size:18px;font-weight:600;color:var(--title)">828</div>
-          <div style="font-size:9.5px;color:var(--muted)">24% do total</div>
-        </div>
-        <div style="padding:10px;background:rgba(138,95,80,0.04);border-radius:5px">
-          <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Acesso direto</div>
-          <div style="font-size:18px;font-weight:600;color:var(--title)">670</div>
-          <div style="font-size:9.5px;color:var(--muted)">20% do total</div>
-        </div>
-        <div style="padding:10px;background:rgba(66,133,244,0.06);border-radius:5px;border:1px solid rgba(66,133,244,0.1)">
-          <div style="font-size:9.5px;color:#4285F4;margin-bottom:3px">Google Ads</div>
-          <div style="font-size:18px;font-weight:600;color:#4285F4">495</div>
-          <div style="font-size:9.5px;color:var(--muted)">15% do total</div>
-        </div>
-        <div style="padding:10px;background:rgba(138,95,80,0.04);border-radius:5px">
-          <div style="font-size:9.5px;color:var(--muted);margin-bottom:3px">Social orgânico</div>
-          <div style="font-size:18px;font-weight:600;color:var(--title)">298</div>
-          <div style="font-size:9.5px;color:var(--muted)">9% do total</div>
-        </div>
-        <div style="padding:10px;background:rgba(24,119,242,0.06);border-radius:5px;border:1px solid rgba(24,119,242,0.1)">
-          <div style="font-size:9.5px;color:#1877F2;margin-bottom:3px">Meta Ads</div>
-          <div style="font-size:18px;font-weight:600;color:#1877F2">57</div>
-          <div style="font-size:9.5px;color:var(--muted)">2% · campanha awareness</div>
-        </div>
-      </div>
-      <div style="margin-top:12px;font-size:10.5px;color:var(--muted)">Meta configurado para alcance e reconhecimento — o volume de visitas diretas é secundário nesta fase.</div>
-    </div>
 
   </div>
 </div>
